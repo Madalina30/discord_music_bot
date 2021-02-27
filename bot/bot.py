@@ -3,10 +3,12 @@ from pathlib import Path
 import discord
 from discord.ext import commands
 
+
 class MusicBot(commands.Bot):
     def __init__(self):
-        self._cogs = [p.stem for p in Path(".").glob("./bot/cogs/*.py")] 
-        super().__init__(command_prefix=self.prefix, case_insensitive=True, intents=discord.Intents.all())
+        self._cogs = [p.stem for p in Path(".").glob("./bot/cogs/*.py")]
+        super().__init__(command_prefix=self.prefix,
+                         case_insensitive=True, intents=discord.Intents.all())
 
     def setup(self):  # set up bot
         print("Running setup...")
@@ -22,7 +24,7 @@ class MusicBot(commands.Bot):
 
         with open("data/token.0", "r", encoding="utf-8") as f:
             TOKEN = f.read()
-        
+
         print("Bot running...")
         super().run(TOKEN, reconnect=True)  # reconnect discord if fails
 
@@ -36,7 +38,7 @@ class MusicBot(commands.Bot):
 
     async def on_connect(self):
         print(f"Connected to Discord (latency: {self.latency*1000} ms).")
-    
+
     async def on_resumed(self):
         print("Bot resumed")
 
@@ -49,7 +51,7 @@ class MusicBot(commands.Bot):
 
     async def prefix(self, bot, msg):
         return commands.when_mentioned_or("~")(bot, msg)
-    
+
     async def process_commands(self, msg):
         context = await self.get_context(msg, cls=commands.Context)
 

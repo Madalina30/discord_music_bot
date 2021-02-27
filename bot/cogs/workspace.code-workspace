@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "..\\..\\.."
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "firstProject",
+		"liveServer.settings.port": 5501,
+		"files.associations": {
+			"cmath": "c",
+			"complex": "c",
+			"*.ipp": "c",
+			"codecvt": "c",
+			"xlocale": "c"
+		}
+	}
+}

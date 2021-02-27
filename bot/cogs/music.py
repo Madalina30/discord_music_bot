@@ -20,6 +20,8 @@ OPTIONS = {
 }
 
 # different errors
+
+
 class AlreadyConnectedToChannel(commands.CommandError):
     pass
 
@@ -42,7 +44,6 @@ class PlayerIsAlreadyPaused(commands.CommandError):
 
 class NoMoreTracks(commands.CommandError):
     pass
-
 
 
 class NoPreviousTracks(commands.CommandError):
@@ -96,7 +97,6 @@ class Queue:
 
     def add(self, *args):
         self._queue.extend(args)  # multiple append
-    
 
     def get_next_track(self):
         if not self._queue:
@@ -111,7 +111,7 @@ class Queue:
                 self.position = 0
             else:
                 return None
-                
+
         return self._queue[self.position]
 
     def shuffle(self):
@@ -135,6 +135,7 @@ class Queue:
     def empty_queue(self):
         self._queue.clear()
         self.position = 0
+
 
 class Player(wavelink.Player):
     def __init__(self, *args, **kwargs):
@@ -175,11 +176,12 @@ class Player(wavelink.Player):
         if not self.is_playing and not self.queue.is_empty:
             await self.start_playback()
     # SEARCH FOR MUSIC
+
     async def choose_track(self, context, tracks):  # choose from queue
         def _check(reaction, user):
             return (
                 reaction.emoji in OPTIONS.keys()
-                and user == context.author 
+                and user == context.author
                 and reaction.message.id == msg.id
             )
 
@@ -195,7 +197,8 @@ class Player(wavelink.Player):
             timestamp=dt.datetime.utcnow()
         )
         embed.set_author(name="Query Results")
-        embed.set_footer(text=f"Invoked by {context.author.display_name}", icon_url=context.author.avatar_url)
+        embed.set_footer(
+            text=f"Invoked by {context.author.display_name}", icon_url=context.author.avatar_url)
 
         msg = await context.send(embed=embed)
         for emoji in list(OPTIONS.keys())[:min(len(tracks), len(OPTIONS))]:
@@ -223,7 +226,6 @@ class Player(wavelink.Player):
 
     async def repeat_tracks(self):
         await self.play(self.queue.current_track)
-        
 
 
 class Music(commands.Cog, wavelink.WavelinkMixin):
@@ -233,10 +235,14 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         self.bot.loop.create_task(self.start_nodes())
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):  # when a member joins or leave the channel - voice channel
-        if not member.bot and after.channel is None:  # if member (human) left the voice channel
-            if not [m for m in before.channel.members if not m.bot]:  # if there aren't members in channel
-                await self.get_player(member.guild).teardown()  # disconnect the bot from the channel
+    # when a member joins or leave the channel - voice channel
+    async def on_voice_state_update(self, member, before, after):
+        # if member (human) left the voice channel
+        if not member.bot and after.channel is None:
+            # if there aren't members in channel
+            if not [m for m in before.channel.members if not m.bot]:
+                # disconnect the bot from the channel
+                await self.get_player(member.guild).teardown()
 
     @wavelink.WavelinkMixin.listener()
     async def on_node_ready(self, node):  # what the client connects to
@@ -251,7 +257,7 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         else:
             await payload.player.advance()
 
-    async def cogcheck(self, context):  
+    async def cogcheck(self, context):
         if isinstance(context.channel, discord.DMChannel):
             await context.send("Music commands are not available in DMs.")
             return False
@@ -262,7 +268,7 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
 
         nodes = {
             "MAIN": {
-                "host" : "127.0.0.1",
+                "host": "127.0.0.1",
                 "port": 2333,
                 "rest_uri": "http://127.0.0.1:2333",
                 "password": "youshallnotpass",  # for local host - not working if not this
@@ -279,11 +285,11 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
             return self.wavelink.get_player(obj.guild.id, cls=Player, context=obj)
         elif isinstance(obj, discord.Guild):
             return self.wavelink.get_player(obj.id, cls=Player)
-        
+
     @commands.command(name="connect", aliases=["join"])
     async def connect_command(self, context, *, channel: t.Optional[discord.VoiceChannel]):
         player = self.get_player(context)
-        channel =  await player.connect(context, channel)
+        channel = await player.connect(context, channel)
         await context.send(f"Connected to {channel.name}.")
 
     @connect_command.error
@@ -300,7 +306,7 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         await context.send("Disconnected.")
 
     @commands.command(name="play")
-    async def play_command(self, context, * , query: t.Optional[str]):
+    async def play_command(self, context, *, query: t.Optional[str]):
         player = self.get_player(context)
 
         if not player.is_connected:
@@ -325,7 +331,7 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
             await context.send("No songs to play - queue is empty")
         elif isinstance(exception, NoVoiceChannel):
             await context.send("No suitable voice channel")
-    
+
     @commands.command(name="pause")
     async def pause_command(self, context):
         player = self.get_player(context)
@@ -409,8 +415,8 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
 
         if player.queue.is_empty:
             raise QueueIsEmpty
-        
-        embed = discord.Embed (
+
+        embed = discord.Embed(
             title="Your queue",
             description=f"Showing up to next {show} tracks",
             colour=context.author.colour,
@@ -418,12 +424,12 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         )
         embed.set_author(name="Query Results")
         embed.set_footer(
-            text=f"Requested by {context.author.display_name}", 
+            text=f"Requested by {context.author.display_name}",
             icon_url=context.author.avatar_url
         )
         embed.add_field(
-            name="Currently playing", 
-            value=getattr(player.queue.current_track, "title", ""), 
+            name="Currently playing",
+            value=getattr(player.queue.current_track, "title", ""),
             inline=False
         )
         nextInQueue = player.queue.nextInQueue
@@ -431,7 +437,7 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
             embed.add_field(
                 name="Next up",
                 value="\n"
-                    .join(track.title for track in nextInQueue[:show]),
+                .join(track.title for track in nextInQueue[:show]),
                 inline=False
             )
 
@@ -442,7 +448,6 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         if isinstance(exception, QueueIsEmpty):
             await context.send("The queue is currently empty.")
 
-    
 
 def setup(bot):
     bot.add_cog(Music(bot))
